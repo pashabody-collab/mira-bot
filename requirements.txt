@@ -1,0 +1,5 @@
+aiogram==3.*
+python-dotenv
+requests
+aiohttp
+fal-client
