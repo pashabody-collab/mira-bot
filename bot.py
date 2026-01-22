@@ -294,7 +294,16 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await _handle_generation(update, txt)
 
     def main():
-    _ensure_env()
+    def _ensure_env():
+    required = [
+        "TELEGRAM_BOT_TOKEN",
+        "FAL_KEY",
+    ]
+
+    missing = [k for k in required if not os.getenv(k)]
+    if missing:
+        raise RuntimeError(f"Missing env vars: {', '.join(missing)}")
+
     token = os.getenv("TELEGRAM_BOT_TOKEN")
 
     app = Application.builder().token(token).build()
