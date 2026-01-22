@@ -110,10 +110,57 @@ def _sanitize_text(text: str, limit: int = 1200) -> str:
 
 def _build_prompt(style: str, user_prompt: str) -> str:
     style = (style or "realistic").strip()
-    user_prompt = _sanitize_text(user_prompt)
+
+    scene = _expand_short_request(user_prompt)
+
     return (
-        f"{style}. photorealistic, ultra realistic, natural skin texture, "
-        f"sharp focus, high detail. {user_prompt}"
+        f"{style}. "
+        f"PHOTOREALISTIC travel photo, ultra realistic, sharp focus, natural skin texture. "
+        f"IMPORTANT: The SAME MAN from the reference face image MUST be in the frame. "
+        f"One adult man, not a woman, not a different person. "
+        f"Medium shot or full body (choose what fits the scene), correct anatomy. "
+        f"{scene}"
+    )
+
+def _expand_short_request(user_text: str) -> str:
+    """
+    Превращает короткий запрос ("я на мальдивах") в нормальное описание сцены.
+    Без внешнего GPT — просто умные шаблоны.
+    """
+    t = _sanitize_prompt(user_text).lower()
+
+    # Базовое действие (если пользователь не сказал что делает)
+    action = "standing and smiling"
+    if "сижу" in t or "сид" in t:
+        action = "sitting and smiling"
+    if "леж" in t:
+        action = "lying on a beach lounger, relaxed"
+    if "иду" in t or "гуля" in t:
+        action = "walking casually"
+
+    # Локации/сцены по ключевым словам
+    if "мальдив" in t:
+        return (
+            f"Maldives tropical beach, turquoise ocean, white sand, palm trees. "
+            f"The man is {action}. Beautiful scenic background, travel photo."
+        )
+
+    if "дуба" in t:
+        return (
+            f"Dubai city, modern skyline, warm sunset light. "
+            f"The man is {action}. Travel photo, realistic city atmosphere."
+        )
+
+    if "офис" in t:
+        return (
+            f"Modern office interior, natural window light, clean background. "
+            f"The man is {action}. Corporate photo, realistic."
+        )
+
+    # Если запрос слишком короткий и без места — делаем универсальную сцену
+    return (
+        f"Realistic photo scene matching the request: {user_text}. "
+        f"The man is {action}. Clear environment, realistic background."
     )
 
 
@@ -254,6 +301,10 @@ async def generate_with_fal(face_path: str, prompt: str, strength: float, guidan
     # We pass several common aliases to be compatible.
     args = {
         "prompt": prompt,
+"negative_prompt": (
+    "woman, female, girl, different person, different face, "
+    "no person, empty scene, cartoon, anime, illustration, painting, cgi, 3d"
+),
 
         # common aliases for reference/identity image:
         "image_url": face_url,
