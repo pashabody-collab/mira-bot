@@ -232,42 +232,42 @@ async def generate_with_fal(face_path: str, prompt: str) -> str:
     """
     Returns URL of generated image.
     """
-    # Upload face image to fal CDN
+
+    # Загружаем фото лица в fal
     face_url = fal_client.upload_file(face_path)
 
     args = {
-        "prompt": prompt,
-        # В твоём коде было image_url — это правильно для ip-adapter-face-id (использует референс-изображение)
-        "image_url": face_url,
-        "negative_prompt": NEGATIVE,
+        # ❗ ВАЖНО: ИМЕННО ЭТОТ ПАРАМЕТР
+        "face_image_url": face_url,
 
-        # common params (model may ignore some)
-        "guidance_scale": DEFAULT_GUIDANCE,
-        "num_inference_steps": DEFAULT_STEPS,
-        "width": DEFAULT_WIDTH,
-        "height": DEFAULT_HEIGHT,
-        "face_id_det_size": DEFAULT_FACE_DET,
-        "seed": DEFAULT_SEED,
+        # Основной промпт (уже расширенный сценарием)
+        "prompt": prompt,
+
+        # Негативный промпт
+        "negative_prompt": (
+            "low quality, blurry, deformed face, extra fingers, "
+            "bad anatomy, cartoon, anime, painting, unrealistic"
+        ),
+
+        # Параметры качества
+        "guidance_scale": 7.5,
+        "num_inference_steps": 40,
+        "num_samples": 1,
+        "width": 768,
+        "height": 1024,
+        "face_id_det_size": 640,
+        "seed": 42,
     }
 
-    # Queue submit (async)
-    handler = await fal_client.submit_async(FAL_MODEL, arguments=args)
-    result = await handler.get()
+    # ВАЖНО: правильный вызов
+    result = await fal_client.run(
+        "fal-ai/ip-adapter-face-id",
+        arguments=args,
+    )
 
-    # Безопасно вытаскиваем url
-    # Обычно: result["images"][0]["url"] (или "image" / "output" в других моделях)
-    if isinstance(result, dict):
-        images = result.get("images")
-        if isinstance(images, list) and images:
-            first = images[0]
-            if isinstance(first, dict) and first.get("url"):
-                return first["url"]
+    # Забираем ссылку на изображение
+    return result["images"][0]["url"]
 
-        # fallback keys
-        if result.get("image") and isinstance(result["image"], dict) and result["image"].get("url"):
-            return result["image"]["url"]
-        if result.get("url"):
-            return result["url"]
 
     raise RuntimeError(f"Unexpected fal result format: {json.dumps(result)[:500]}")
 
