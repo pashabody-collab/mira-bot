@@ -293,9 +293,8 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # обычный текст от пользователя
     await _handle_generation(update, txt)
 
-def main():
+    def main():
     _ensure_env()
-
     token = os.getenv("TELEGRAM_BOT_TOKEN")
 
     app = Application.builder().token(token).build()
@@ -303,12 +302,14 @@ def main():
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("status", cmd_status))
     app.add_handler(CommandHandler("reset", cmd_reset))
-
     app.add_handler(MessageHandler(filters.PHOTO, on_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
-    # ВАЖНО: drop_pending_updates помогает после перезапусков
-    app.run_polling(drop_pending_updates=True)
+    # ✅ если Telegram ругнётся на конфликт — просто логируем и не валим процесс
+    async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+        err = context.error
+        log.exception("PTB error: %s", err)
 
-if __name__ == "__main__":
-    main()
+    app.add_error_handler(on_error)
+
+    app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
