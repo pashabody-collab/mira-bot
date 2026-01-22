@@ -351,10 +351,13 @@ async def _handle_generation(update: Update, context: ContextTypes.DEFAULT_TYPE,
     await update.message.reply_text("Генерирую фотореалистичное фото с твоим лицом… ⏳", reply_markup=main_keyboard())
 
     try:
-        img_url = await generate_with_fal(_user_face_path[uid], prompt)
-        _inc_usage(uid)
-        caption = f"Готово ✅\nМодель: {FAL_MODEL}\nСтиль: {style}"
-        await update.message.reply_photo(photo=img_url, caption=caption, reply_markup=main_keyboard())
+        img_url = await generate_with_fal(user_face_path[uid], final_prompt)
+
+await update.message.reply_photo(
+    photo=img_url,
+    caption="Готово ✅"
+)
+
 
     except Exception as e:
         log.exception("Generation failed")
