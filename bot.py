@@ -4,8 +4,17 @@ import time
 import json
 import logging
 import tempfile
+from telegram import ReplyKeyboardMarkup, KeyboardButton
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
+def main_keyboard():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton("▶️ Запустить")]
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=False,
+    )
 
 from telegram import Update
 from telegram.constants import ChatAction
@@ -120,7 +129,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "/reset — сбросить лицо\n\n"
         "⚠️ Отправляй фото только с согласия человека."
     )
-    await update.message.reply_text(msg, parse_mode="Markdown")
+    await update.message.reply_text(
+    msg,
+    parse_mode="Markdown",
+    reply_markup=main_keyboard()
+)
+
 
 
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -329,6 +343,7 @@ def main() -> None:
     app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("^▶️ Запустить$"), start))
     app.add_handler(CommandHandler("status", status))
     app.add_handler(CommandHandler("reset", reset))
     app.add_handler(CommandHandler("style", style))
