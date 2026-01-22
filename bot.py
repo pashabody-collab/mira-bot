@@ -105,7 +105,42 @@ _state: Dict[int, Dict[str, Any]] = {}
 def _sanitize_text(text: str, limit: int = 1200) -> str:
     text = (text or "").strip()
     text = re.sub(r"\s+", " ", text)
-    return text[:limit]
+    return text[:limit
+    import random
+
+COFFEE_SCENES = [
+    "A photorealistic photo of the same person from the reference face, "
+    "sitting in a cozy Parisian cafe, drinking coffee, warm morning light, "
+    "street view, shallow depth of field, DSLR photo, 85mm lens, ultra realistic",
+
+    "A photorealistic photo of the same person from the reference face, "
+    "sitting in a modern coffee shop in New York, large windows, city street outside, "
+    "natural daylight, lifestyle photography, ultra realistic",
+
+    "A photorealistic photo of the same person from the reference face, "
+    "drinking coffee in a seaside cafe, ocean view, palm trees, relaxed atmosphere, "
+    "sunny weather, real skin texture, ultra realistic",
+
+    "A photorealistic photo of the same person from the reference face, "
+    "sitting in a cozy cafe in Tokyo, minimal interior, soft daylight, "
+    "cinematic composition, ultra realistic",
+
+    "A photorealistic photo of the same person from the reference face, "
+    "in a stylish European coffee shop, holding a cup of coffee, "
+    "natural candid photo, shallow depth of field, ultra realistic"
+]
+def expand_short_request(user_text: str) -> str:
+    t = _sanitize_text(user_text).lower()
+
+    if "коф" in t:
+        return random.choice(COFFEE_SCENES)
+
+    # fallback — если не совпало
+    return (
+        "A photorealistic photo of the same person from the reference face, "
+        f"{user_text}, real world scene, natural lighting, ultra realistic"
+    )
+
 
 
 def _build_prompt(style: str, user_prompt: str) -> str:
@@ -347,7 +382,9 @@ async def handle_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     face_path = st["face_path"]
     style_txt = st.get("style", "realistic")
-    prompt = _build_prompt(style_txt, text)
+    scene = expand_short_request(text)
+prompt = _build_prompt(style_txt, scene)
+
 
     await update.message.chat.send_action(ChatAction.TYPING)
     await update.message.reply_text("Генерирую…")
