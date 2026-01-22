@@ -33,11 +33,11 @@ FAL_MODEL = os.getenv("FAL_MODEL", "fal-ai/ip-adapter-face-id").strip()
 FREE_LIMIT = int(os.getenv("FREE_LIMIT", "10").strip())
 
 # Quality tuning
-DEFAULT_GUIDANCE = float(os.getenv("GUIDANCE_SCALE", "7.5"))
+DEFAULT_GUIDANCE = float(os.getenv("GUIDANCE_SCALE", "6"))
 DEFAULT_STEPS = int(os.getenv("STEPS", "40"))
 DEFAULT_NUM_SAMPLES = int(os.getenv("NUM_SAMPLES", "1"))
-DEFAULT_WIDTH = int(os.getenv("WIDTH", "768"))
-DEFAULT_HEIGHT = int(os.getenv("HEIGHT", "1024"))
+DEFAULT_WIDTH = int(os.getenv("WIDTH", "1024"))
+DEFAULT_HEIGHT = int(os.getenv("HEIGHT", "1280"))
 DEFAULT_FACE_DET = int(os.getenv("FACE_ID_DET_SIZE", "640"))
 
 # Optional (some models ignore these)
@@ -201,9 +201,12 @@ def build_scene_prompt(style: str, scene: str) -> str:
     # Важно: просим, чтобы человек был в кадре (не просто “фон”)
     return (
         f"{style}. {REALISM_BOOST}. "
-        f"One person in the scene, the same person as the reference face, "
-        f"natural proportions, realistic face identity preserved, "
-        f"half-body or full-body shot, "
+        "One person in the scene, the same person as the reference face, "
+"FULL BODY OR HALF BODY SHOT, wide angle photography, "
+"person clearly visible inside the environment, "
+"environment is important, background must be visible, "
+"natural proportions, realistic face identity preserved, "
+
         f"scene: {scene}. "
         f"NO text, NO watermark."
     )
